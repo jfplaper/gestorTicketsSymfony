@@ -1,20 +1,57 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello MainController!{% endblock %}
+{% block title %}GestorTickets - Inicio{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+    {% if app.user %}
+		<h1>Mis tickets / solicitudes</h1>
+        <a href="{{ path('app_ticket_new') }}">Crear ticket</a>
+		<br>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/Users/Usuario/Desktop/misymfony/gestor_tickets/src/Controller/MainController.php</code></li>
-        <li>Your template at <code>C:/Users/Usuario/Desktop/misymfony/gestor_tickets/templates/main/index.html.twig</code></li>
-    </ul>
-</div>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Título</th>
+					<th>Texto</th>
+					<th>Atendido por</th>
+                    <th>Estado</th>
+                    <th>Puntuación</th>
+                    <th>¿De 1 a 5...?</th>
+                    <th>Acciones</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for ticket in tickets %}
+				<tr>
+                    <td>{{ ticket.title }}</td>
+                    <td>{{ ticket.text }}</td>
+                    <td>{{ ticket.worker ? ticket.worker.username : 'A la espera' }}</td>
+                    <td>{{ ticket.state ? ticket.state : 'No tramitado' }}</td>
+                    <td>{{ ticket.score ? ticket.score : '-' }}</td>
+					{% if ticket.state == "finalizado" and ticket.score is null %}
+                        <td>
+                            <a href="{{ path('app_main') }}">1</a>&nbsp;
+                            <a href="{{ path('app_main') }}">2</a>&nbsp;
+                            <a href="{{ path('app_main') }}">3</a>&nbsp;
+                            <a href="{{ path('app_main') }}">4</a>&nbsp;
+                            <a href="{{ path('app_main') }}">5</a>
+                        </td>
+                    {% else %}
+                        <td>-</td>
+                    {% endif %}
+                    <td>
+                        <a href="{{ path('app_main') }}">Mensajes</a>
+                    </td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="5">No tienes tickets</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+		<br>
+	{% else %}
+		<img src="./images/showcase.png" alt="Imagen de medios de comunicación" width="auto" height="300" />
+	{% endif %}
 {% endblock %}
