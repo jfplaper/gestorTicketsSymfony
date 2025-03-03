@@ -1,38 +1,41 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ticket{% endblock %}
+{% block title %}GestorTickets - Ticket{% endblock %}
 
 {% block body %}
     <h1>Ticket</h1>
-
     <table class="table">
         <tbody>
             <tr>
-                <th>Id</th>
-                <td>{{ ticket.id }}</td>
-            </tr>
-            <tr>
-                <th>Title</th>
+                <th>Título</th>
                 <td>{{ ticket.title }}</td>
             </tr>
             <tr>
-                <th>Text</th>
+                <th>Texto</th>
                 <td>{{ ticket.text }}</td>
             </tr>
             <tr>
-                <th>State</th>
-                <td>{{ ticket.state }}</td>
-            </tr>
-            <tr>
-                <th>Score</th>
-                <td>{{ ticket.score }}</td>
+                <th>Cliente</th>
+                <td>{{ ticket.client ? ticket.client.username : '-' }}</td>
             </tr>
         </tbody>
     </table>
-
-    <a href="{{ path('app_ticket_index') }}">back to list</a>
-
-    <a href="{{ path('app_ticket_edit', {'id': ticket.id}) }}">edit</a>
-
-    {{ include('ticket/_delete_form.html.twig') }}
+    <br>
+    {% if ticket.state != "finalizado" %}
+        <form action="{{ path('app_message_create', {'id': ticket.id}) }}" method="get">
+            <input type="text" name="response" placeholder="Escribe aquí..." />
+            <input type="submit" value="Responder" />
+        </form>
+        <br><br>
+    {% endif %}
+    <h1>Mensajes del ticket</h1>
+    {% for message in messages %}
+        <div>
+            <p><b>{{ message.author ? message.author.username : '-' }}</b>: {{ message.text }}</p><br>
+        </div>
+    {% else %}
+        <div>
+            <p>No hay mensajes</p>
+        </div>
+    {% endfor %}
 {% endblock %}

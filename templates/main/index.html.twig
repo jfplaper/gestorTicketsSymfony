@@ -4,53 +4,186 @@
 
 {% block body %}
     {% if app.user %}
-		<h1>Mis tickets / solicitudes</h1>
-        <a href="{{ path('app_ticket_new') }}">Crear ticket</a>
-		<br>
+		{# --------------------------------- V I S T A   A D M I N --------------------------------- #}
+		{% if 'ROLE_ADMIN' in app.user.roles %}
+			<h1>Todos los tickets existentes</h1>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Título</th>
+						<th>Texto</th>
+						<th>Cliente</th>
+						<th>Atendido por</th>
+						<th>Estado</th>
+						<th>Puntuación</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for ticket in tickets %}
+					<tr>
+						<td>{{ ticket.title }}</td>
+						<td>{{ ticket.text }}</td>
+						<td>{{ ticket.client ? ticket.client.username : '-' }}</td>
+						<td>{{ ticket.worker ? ticket.worker.username : 'A la espera' }}</td>
+						<td>{{ ticket.state ? ticket.state : 'No tramitado' }}</td>
+						<td>{{ ticket.score ? ticket.score : '-' }}</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="5">No hay tickets</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			<br>
+			<h1>Listado de usuarios</h1>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Id</th>
+						<th>Username</th>
+						<th>Roles</th>
+						<th>Password</th>
+						<th>Cambiar rol a...</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for user in users %}
+					<tr>
+						<td>{{ user.id }}</td>
+						<td>{{ user.username }}</td>
+						<td>{{ user.roles ? user.roles|json_encode : '' }}</td>
+						<td>{{ user.password }}</td>
+						<td>
+							<a href="{{ path('app_user_change_rol', {'id': user.id, 'role': 'ROLE_ADMIN'}) }}">ROLE_ADMIN</a>
+							<a href="{{ path('app_user_change_rol', {'id': user.id, 'role': 'ROLE_USER'}) }}">ROLE_USER</a>
+							<a href="{{ path('app_user_change_rol', {'id': user.id, 'role': 'ROLE_WORKER'}) }}">ROLE_WORKER</a>
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="5">No hay registros de usuarios</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		{# --------------------------------- V I S T A   W O R K E R --------------------------------- #}
+		{% elseif 'ROLE_WORKER' in app.user.roles %}
+			<h1>Mis tickets abiertos (no finalizados)</h1>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Título</th>
+						<th>Texto</th>
+						<th>Cliente</th>
+						<th>Atendido por</th>
+						<th>Estado</th>
+						<th>Puntuación</th>
+						<th>Acciones</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for ticket in tickets %}
+					<tr>
+						<td>{{ ticket.title }}</td>
+						<td>{{ ticket.text }}</td>
+						<td>{{ ticket.client ? ticket.client.username : '-' }}</td>
+						<td>{{ ticket.worker ? ticket.worker.username : 'A la espera' }}</td>
+						<td>{{ ticket.state ? ticket.state : 'No tramitado' }}</td>
+						<td>{{ ticket.score ? ticket.score : '-' }}</td>
+						<td>
+							<a href="{{ path('app_ticket_show', {'id': ticket.id}) }}">Entrar</a>
+							<a href="{{ path('app_ticket_finish', {'id': ticket.id}) }}">Cerrar</a>
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="5">No tienes tickets</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			<br>
+			<h1>Tickets nuevos (no respondidos por nadie)</h1>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Título</th>
+						<th>Texto</th>
+						<th>Cliente</th>
+						<th>Atendido por</th>
+						<th>Estado</th>
+						<th>Puntuación</th>
+						<th>Acciones</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for newTicket in newTickets %}
+					<tr>
+						<td>{{ newTicket.title }}</td>
+						<td>{{ newTicket.text }}</td>
+						<td>{{ newTicket.client ? newTicket.client.username : '-' }}</td>
+						<td>{{ newTicket.worker ? newTicket.worker.username : 'A la espera' }}</td>
+						<td>{{ newTicket.state ? newTicket.state : 'No tramitado' }}</td>
+						<td>{{ newTicket.score ? newTicket.score : '-' }}</td>
+						<td><a href="{{ path('app_ticket_assign', {'id': newTicket.id}) }}">Asignármelo</a></td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="5">No hay tickets</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		{# ------------------------------ V I S T A   S Ó L O   U S E R ------------------------------ #}
+		{% else %}
+			<h1>Mis tickets / solicitudes</h1>
+			<a href="{{ path('app_ticket_new') }}">Enviar ticket</a>
+			<br>
 
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Título</th>
-					<th>Texto</th>
-					<th>Atendido por</th>
-                    <th>Estado</th>
-                    <th>Puntuación</th>
-                    <th>¿De 1 a 5...?</th>
-                    <th>Acciones</th>
-				</tr>
-			</thead>
-			<tbody>
-			{% for ticket in tickets %}
-				<tr>
-                    <td>{{ ticket.title }}</td>
-                    <td>{{ ticket.text }}</td>
-                    <td>{{ ticket.worker ? ticket.worker.username : 'A la espera' }}</td>
-                    <td>{{ ticket.state ? ticket.state : 'No tramitado' }}</td>
-                    <td>{{ ticket.score ? ticket.score : '-' }}</td>
-					{% if ticket.state == "finalizado" and ticket.score is null %}
-                        <td>
-                            <a href="{{ path('app_main') }}">1</a>&nbsp;
-                            <a href="{{ path('app_main') }}">2</a>&nbsp;
-                            <a href="{{ path('app_main') }}">3</a>&nbsp;
-                            <a href="{{ path('app_main') }}">4</a>&nbsp;
-                            <a href="{{ path('app_main') }}">5</a>
-                        </td>
-                    {% else %}
-                        <td>-</td>
-                    {% endif %}
-                    <td>
-                        <a href="{{ path('app_main') }}">Mensajes</a>
-                    </td>
-				</tr>
-			{% else %}
-				<tr>
-					<td colspan="5">No tienes tickets</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-		</table>
-		<br>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Título</th>
+						<th>Texto</th>
+						<th>Atendido por</th>
+						<th>Estado</th>
+						<th>Puntuación</th>
+						<th>¿De 1 a 5...?</th>
+						<th>Acciones</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for ticket in tickets %}
+					<tr>
+						<td>{{ ticket.title }}</td>
+						<td>{{ ticket.text }}</td>
+						<td>{{ ticket.worker ? ticket.worker.username : 'A la espera' }}</td>
+						<td>{{ ticket.state ? ticket.state : 'No tramitado' }}</td>
+						<td>{{ ticket.score ? ticket.score : '-' }}</td>
+						{% if ticket.state == "finalizado" and ticket.score is null %}
+							<td>
+								<a href="{{ path('app_ticket_score', {'id': ticket.id, 'score': 1}) }}">1</a>&nbsp;
+								<a href="{{ path('app_ticket_score', {'id': ticket.id, 'score': 2}) }}">2</a>&nbsp;
+								<a href="{{ path('app_ticket_score', {'id': ticket.id, 'score': 3}) }}">3</a>&nbsp;
+								<a href="{{ path('app_ticket_score', {'id': ticket.id, 'score': 4}) }}">4</a>&nbsp;
+								<a href="{{ path('app_ticket_score', {'id': ticket.id, 'score': 5}) }}">5</a>
+							</td>
+						{% else %}
+							<td>-</td>
+						{% endif %}
+						<td><a href="{{ path('app_ticket_show', {'id': ticket.id}) }}">Entrar</a></td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="5">No tienes tickets</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+			<br>
+		{% endif %}
+
 	{% else %}
 		<img src="./images/showcase.png" alt="Imagen de medios de comunicación" width="auto" height="300" />
 	{% endif %}
